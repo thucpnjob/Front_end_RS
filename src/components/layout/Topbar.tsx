@@ -1,13 +1,22 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Topbar() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
-    if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`)
+    const q = query.trim()
+    if (!q) return
+    if (location.pathname === '/search') {
+      // Đang ở trang search → cập nhật URL để trigger filter
+      navigate(`/search?q=${encodeURIComponent(q)}`, { replace: true })
+    } else {
+      navigate(`/search?q=${encodeURIComponent(q)}`)
+    }
+    setQuery('')
   }
 
   return (

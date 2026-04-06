@@ -8,6 +8,8 @@ import Library from './pages/Library'
 import UserSearch from './pages/UserSearch'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Profile from './pages/Profile'
+import History from './pages/History'
 import AdminLayout from './pages/admin/AdminLayout'
 import AdminLogin from './pages/admin/AdminLogin'
 import Dashboard from './pages/admin/Dashboard'
@@ -30,6 +32,8 @@ export default function App() {
             <Route path="/recommendations" element={<Recommendations />} />
             <Route path="/library" element={<Library />} />
             <Route path="/search" element={<UserSearch />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/history" element={<History />} />
           </Route>
 
           {/* Admin routes — AdminLayout handles auth guard */}

@@ -34,6 +34,21 @@ export interface AuthUser {
   role: 'user' | 'admin'
 }
 
+export interface UserProfile extends AuthUser {
+  created_at: string
+  stats: { favorites: number; booksRead: number }
+}
+
+export interface HistoryItem {
+  viewed_at: string
+  books: BookAPI
+}
+
+export interface FavoriteItem {
+  created_at: string
+  books: BookAPI
+}
+
 export interface AuthResponse {
   token: string
   user: AuthUser
@@ -78,5 +93,15 @@ export const api = {
     update: (id: string, data: Partial<BookAPI>) => request<BookAPI>(`/books/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => request<void>(`/books/${id}`, { method: 'DELETE' }),
     stats: () => request<Stats>('/books/stats'),
+  },
+  users: {
+    profile: () => request<UserProfile>('/users/me/profile'),
+    updateProfile: (data: { name: string; currentPassword?: string; newPassword?: string }) =>
+      request<AuthUser>('/users/me/profile', { method: 'PUT', body: JSON.stringify(data) }),
+    history: () => request<HistoryItem[]>('/users/me/history'),
+    addHistory: (bookId: string) => request<void>(`/users/me/history/${bookId}`, { method: 'POST' }),
+    removeHistory: (bookId: string) => request<void>(`/users/me/history/${bookId}`, { method: 'DELETE' }),
+    favorites: () => request<FavoriteItem[]>('/users/me/favorites'),
+    toggleFavorite: (bookId: string) => request<{ favorited: boolean }>(`/users/me/favorites/${bookId}`, { method: 'POST' }),
   },
 }

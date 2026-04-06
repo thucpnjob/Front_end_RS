@@ -1,11 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { books, reviews, recommendedBooks } from '../data/mockData'
 import BookCard from '../components/ui/BookCard'
+import { useAuth } from '../contexts/AuthContext'
+import { api } from '../lib/api'
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>()
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<'review' | 'comments' | 'related'>('review')
+  const [favorited, setFavorited] = useState(false)
+  const [favLoading, setFavLoading] = useState(false)
+
+  // Tự động lưu lịch sử và kiểm tra yêu thích
+  useEffect(() => {
+    if (!user || !id) return
+    api.users.addHistory(id).catch(() => {})
+    api.users.favorites().then((favs) => {
+      setFavorited(favs.some((f) => f.books.id === id))
+    }).catch(() => {})
+  }, [id, user])
+
+  async function handleToggleFavorite() {
+    if (!user || !id) return
+    setFavLoading(true)
+    try {
+      const res = await api.users.toggleFavorite(id)
+      setFavorited(res.favorited)
+    } finally {
+      setFavLoading(false)
+    }
+  }
 
   const book = books.find((b) => b.id === id)
   if (!book) {
@@ -71,8 +96,16 @@ export default function BookDetail() {
             <button className="bg-accent hover:bg-blue-600 text-white text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
               Đọc ngay
             </button>
-            <button className="border border-navy-600 text-slate-300 text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-navy-700 transition-colors">
-              ♥ Yêu thích
+            <button
+              onClick={handleToggleFavorite}
+              disabled={favLoading || !user}
+              className={`border text-sm font-medium px-5 py-2.5 rounded-lg transition-colors disabled:opacity-50 ${
+                favorited
+                  ? 'border-red-500 text-red-400 bg-red-900/20 hover:bg-red-900/30'
+                  : 'border-navy-600 text-slate-300 hover:bg-navy-700'
+              }`}
+            >
+              {favorited ? '♥ Đã yêu thích' : '♡ Yêu thích'}
             </button>
           </div>
         </div>

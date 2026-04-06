@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import booksRouter from './routes/books'
 import authRouter from './routes/auth'
+import usersRouter from './routes/users'
 import { errorHandler, notFound } from './middleware/errorHandler'
 import { logger } from './middleware/logger'
 import { supabase } from './lib/supabase'
@@ -59,6 +60,7 @@ app.get('/api/debug', async (_req, res) => {
 
 app.use('/api/auth', authRouter)
 app.use('/api/books', booksRouter)
+app.use('/api/users', usersRouter)
 
 app.use(notFound)
 app.use(errorHandler)
