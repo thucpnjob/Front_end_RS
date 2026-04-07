@@ -1,51 +1,52 @@
-import { useState } from 'react'
-import { books } from '../data/mockData'
-import BookCard from '../components/ui/BookCard'
+import { useState, useEffect } from 'react';
+import { recommendationAPI } from '../lib/recommendationService';
+import BookCard from '../components/ui/BookCard';
+import { books } from '../data/mockData';
 
-const genres = ['Tất cả', 'Hiện thực', 'Tình cảm', 'Chiến tranh', 'Cổ điển', 'Văn học đương đại', 'Trào phúng']
+type Book = (typeof books)[number];
 
 export default function Recommendations() {
-  const [activeGenre, setActiveGenre] = useState('Tất cả')
+    const [recommendations, setRecommendations] = useState<Book[]>([]);
+    const [loading, setLoading] = useState(true);
 
-  const filtered =
-    activeGenre === 'Tất cả'
-      ? books
-      : books.filter((b) => b.genre.includes(activeGenre))
+    useEffect(() => {
+        const fetchRecs = async () => {
+            try {
+                const bookIds = await recommendationAPI.getRecommendations(1, 20);
 
-  return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-white text-xl font-bold mb-1">Gợi ý dành cho bạn</h1>
-        <p className="text-slate-400 text-sm">Dựa trên sở thích và lịch sử đọc của bạn</p>
-      </div>
+                // Sửa lỗi TypeScript: chuyển b.id sang number
+                const recBooks = books.filter((b) =>
+                    bookIds.includes(Number(b.id))
+                );
 
-      {/* Genre filter */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {genres.map((g) => (
-          <button
-            key={g}
-            onClick={() => setActiveGenre(g)}
-            className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-              activeGenre === g
-                ? 'bg-accent border-accent text-white'
-                : 'border-navy-700 text-slate-400 hover:text-white hover:border-slate-500'
-            }`}
-          >
-            {g}
-          </button>
-        ))}
-      </div>
+                setRecommendations(recBooks.length > 0 ? recBooks : books.slice(0, 12));
+            } catch (err) {
+                console.error(err);
+                setRecommendations(books.slice(0, 12));
+            } finally {
+                setLoading(false);
+            }
+        };
 
-      {/* Book grid */}
-      <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        {filtered.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </div>
+        fetchRecs();
+    }, []);
 
-      {filtered.length === 0 && (
-        <p className="text-slate-400 text-center py-12">Không có sách trong thể loại này.</p>
-      )}
-    </div>
-  )
+    return (
+        <div>
+            <div className="mb-6">
+                <h1 className="text-white text-xl font-bold mb-1">Gợi ý dành cho bạn</h1>
+                <p className="text-slate-400 text-sm">Dựa trên mô hình Factorization Machine</p>
+            </div>
+
+            {loading ? (
+                <div className="text-center py-12 text-slate-400">Đang lấy gợi ý...</div>
+            ) : (
+                <div className="grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                    {recommendations.map((book) => (
+                        <BookCard key={book.id} book={book} />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
 }
